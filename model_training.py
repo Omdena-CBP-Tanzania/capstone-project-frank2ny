@@ -41,6 +41,9 @@ def train_models(df):
                    ['date', 'Year', 'Month', 'Average_Temperature_C', 
                     'Total_Rainfall_mm', 'season']]
     
+    # Sort feature columns to ensure consistent order
+    feature_cols = sorted(feature_cols)
+    
     # Prepare data for temperature prediction
     X_temp = df[feature_cols]
     y_temp = df['Average_Temperature_C']
@@ -96,6 +99,7 @@ def train_models(df):
     joblib.dump(temp_model, 'models/temperature_model.joblib')
     joblib.dump(rain_model, 'models/rainfall_model.joblib')
     joblib.dump(scaler, 'models/scaler.joblib')
+    joblib.dump(feature_cols, 'models/feature_order.joblib')
     
     return models
 

@@ -27,11 +27,12 @@ def load_models():
     temp_model = joblib.load('models/temperature_model.joblib')
     rain_model = joblib.load('models/rainfall_model.joblib')
     scaler = joblib.load('models/scaler.joblib')
-    return temp_model, rain_model, scaler
+    feature_order = joblib.load('models/feature_order.joblib')
+    return temp_model, rain_model, scaler, feature_order
 
 # Load data and models
 df = load_data()
-temp_model, rain_model, scaler = load_models()
+temp_model, rain_model, scaler, feature_order = load_models()
 
 # Title and description
 st.title("🌍 Tanzania Climate Analysis and Prediction")
@@ -236,21 +237,9 @@ elif page == "Predictions":
         last_12_months['month_cos'] = np.cos(2 * np.pi * last_12_months['Month']/12)
         
         # Create input features with all required columns in the correct order
-        feature_order = [
-            'Max_Temperature_C', 'Min_Temperature_C', 'rolling_avg_rainfall',
-            'rolling_avg_temp', 'temp_range', 'temp_lag_1', 'temp_lag_2',
-            'temp_lag_3', 'temp_lag_6', 'temp_lag_12', 'rainfall_lag_1',
-            'rainfall_lag_2', 'rainfall_lag_3', 'rainfall_lag_6',
-            'rainfall_lag_12', 'month_sin', 'month_cos'
-        ]
-        
-        # Create input features
         input_features = pd.DataFrame({
             'Max_Temperature_C': [last_12_months['Max_Temperature_C'].iloc[-1]],
             'Min_Temperature_C': [last_12_months['Min_Temperature_C'].iloc[-1]],
-            'rolling_avg_rainfall': [last_12_months['rolling_avg_rainfall'].iloc[-1]],
-            'rolling_avg_temp': [last_12_months['rolling_avg_temp'].iloc[-1]],
-            'temp_range': [last_12_months['temp_range'].iloc[-1]],
             'temp_lag_1': [last_12_months['Average_Temperature_C'].iloc[-1]],
             'temp_lag_2': [last_12_months['Average_Temperature_C'].iloc[-2]],
             'temp_lag_3': [last_12_months['Average_Temperature_C'].iloc[-3]],
@@ -262,7 +251,10 @@ elif page == "Predictions":
             'rainfall_lag_6': [last_12_months['Total_Rainfall_mm'].iloc[-6]],
             'rainfall_lag_12': [last_12_months['Total_Rainfall_mm'].iloc[-12]],
             'month_sin': [np.sin(2 * np.pi * (last_date.month)/12)],
-            'month_cos': [np.cos(2 * np.pi * (last_date.month)/12)]
+            'month_cos': [np.cos(2 * np.pi * (last_date.month)/12)],
+            'rolling_avg_temp': [last_12_months['rolling_avg_temp'].iloc[-1]],
+            'rolling_avg_rainfall': [last_12_months['rolling_avg_rainfall'].iloc[-1]],
+            'temp_range': [last_12_months['temp_range'].iloc[-1]]
         })
         
         # Ensure features are in the correct order
@@ -271,7 +263,8 @@ elif page == "Predictions":
         # Scale features while maintaining feature names
         input_scaled = pd.DataFrame(
             scaler.transform(input_features),
-            columns=feature_order
+            columns=feature_order,
+            index=input_features.index
         )
         
         # Pass as numpy array to the model
@@ -383,10 +376,7 @@ elif page == "Predictions":
         custom_input = pd.DataFrame({
             'Max_Temperature_C': [max_temp],
             'Min_Temperature_C': [min_temp],
-            'rolling_avg_rainfall': [rainfall],  # Using input rainfall as rolling average
-            'rolling_avg_temp': [(max_temp + min_temp)/2],  # Using average of input temps
-            'temp_range': [temp_range],
-            'temp_lag_1': [(max_temp + min_temp)/2],  # Using average of input temps
+            'temp_lag_1': [(max_temp + min_temp)/2],
             'temp_lag_2': [(max_temp + min_temp)/2],
             'temp_lag_3': [(max_temp + min_temp)/2],
             'temp_lag_6': [(max_temp + min_temp)/2],
@@ -397,7 +387,10 @@ elif page == "Predictions":
             'rainfall_lag_6': [rainfall],
             'rainfall_lag_12': [rainfall],
             'month_sin': [month_sin],
-            'month_cos': [month_cos]
+            'month_cos': [month_cos],
+            'rolling_avg_temp': [(max_temp + min_temp)/2],
+            'rolling_avg_rainfall': [rainfall],
+            'temp_range': [temp_range]
         })
         
         # Ensure features are in the correct order
@@ -406,7 +399,8 @@ elif page == "Predictions":
         # Scale features while maintaining feature names
         custom_scaled = pd.DataFrame(
             scaler.transform(custom_input),
-            columns=feature_order
+            columns=feature_order,
+            index=custom_input.index
         )
         
         # Pass as numpy array to the model
