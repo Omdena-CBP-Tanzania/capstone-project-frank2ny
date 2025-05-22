@@ -271,8 +271,11 @@ elif page == "Predictions":
         # Convert to numpy array to avoid feature name issues with scaler
         input_array = input_features.values
         
-        # Scale features
-        input_scaled = scaler.transform(input_array)
+        # Scale features while maintaining feature names
+        input_scaled = pd.DataFrame(
+            scaler.transform(input_array),
+            columns=feature_order
+        )
         
         # Make predictions
         temp_pred = temp_model.predict(input_scaled)[0]
@@ -406,8 +409,11 @@ elif page == "Predictions":
         # Convert to numpy array
         custom_array = custom_input.values
         
-        # Scale features
-        custom_scaled = scaler.transform(custom_array)
+        # Scale features while maintaining feature names
+        custom_scaled = pd.DataFrame(
+            scaler.transform(custom_array),
+            columns=feature_order
+        )
         
         # Make predictions
         custom_temp_pred = temp_model.predict(custom_scaled)[0]
