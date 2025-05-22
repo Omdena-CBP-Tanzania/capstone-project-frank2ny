@@ -19,7 +19,7 @@ def create_visualizations(df):
     os.makedirs('plots', exist_ok=True)
     
     # Set style
-    plt.style.use('seaborn')
+    plt.style.use('default')
     
     # 1. Temperature Trends Over Time
     plt.figure(figsize=(15, 6))

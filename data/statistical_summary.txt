@@ -1,0 +1,36 @@
+Statistical Summary of Tanzania Climate Data
+==================================================
+
+Temperature Statistics
+----------------------
+       Average_Temperature_C  Max_Temperature_C  Min_Temperature_C
+count             252.000000         252.000000         252.000000
+mean               25.707540          30.576587          21.698016
+std                 0.541047           1.292534           0.793070
+min                24.200000          28.300000          19.700000
+25%                25.300000          29.600000          21.100000
+50%                25.700000          30.500000          21.700000
+75%                26.000000          31.600000          22.200000
+max                27.500000          33.700000          23.700000
+
+Rainfall Statistics
+-------------------
+count    252.000000
+mean     100.363889
+std       80.485087
+min        6.000000
+25%       39.325000
+50%       72.200000
+75%      147.700000
+max      297.400000
+Name: Total_Rainfall_mm, dtype: float64
+
+Seasonal Averages
+-----------------
+        Average_Temperature_C  Total_Rainfall_mm
+season                                          
+DJF                 25.617460         100.793651
+JJA                 25.704762          46.968254
+MAM                 25.980952         155.968254
+SON                 25.526984          97.725397
+

@@ -125,10 +125,45 @@ else:  # Predictions page
     
     # Get last 12 months of data for lag features
     last_date = df['date'].max()
-    last_12_months = df[df['date'] >= last_date - pd.DateOffset(months=12)]
+    last_12_months = df[df['date'] >= last_date - pd.DateOffset(months=12)].copy()
+    
+    # Calculate any missing features
+    if 'temp_range' not in last_12_months.columns:
+        last_12_months['temp_range'] = last_12_months['Max_Temperature_C'] - last_12_months['Min_Temperature_C']
+    
+    if 'rolling_avg_temp' not in last_12_months.columns:
+        last_12_months['rolling_avg_temp'] = last_12_months['Average_Temperature_C'].rolling(window=12).mean()
+    
+    if 'rolling_avg_rainfall' not in last_12_months.columns:
+        last_12_months['rolling_avg_rainfall'] = last_12_months['Total_Rainfall_mm'].rolling(window=12).mean()
+    
+    # Create lag features if they don't exist
+    for lag in [1, 2, 3, 6, 12]:
+        if f'temp_lag_{lag}' not in last_12_months.columns:
+            last_12_months[f'temp_lag_{lag}'] = last_12_months['Average_Temperature_C'].shift(lag)
+        if f'rainfall_lag_{lag}' not in last_12_months.columns:
+            last_12_months[f'rainfall_lag_{lag}'] = last_12_months['Total_Rainfall_mm'].shift(lag)
+    
+    # Create seasonal features
+    last_12_months['month_sin'] = np.sin(2 * np.pi * last_12_months['Month']/12)
+    last_12_months['month_cos'] = np.cos(2 * np.pi * last_12_months['Month']/12)
+    
+    # Create input features with all required columns in the correct order
+    feature_order = [
+        'Max_Temperature_C', 'Min_Temperature_C', 'rolling_avg_rainfall',
+        'rolling_avg_temp', 'temp_range', 'temp_lag_1', 'temp_lag_2',
+        'temp_lag_3', 'temp_lag_6', 'temp_lag_12', 'rainfall_lag_1',
+        'rainfall_lag_2', 'rainfall_lag_3', 'rainfall_lag_6',
+        'rainfall_lag_12', 'month_sin', 'month_cos'
+    ]
     
     # Create input features
     input_features = pd.DataFrame({
+        'Max_Temperature_C': [last_12_months['Max_Temperature_C'].iloc[-1]],
+        'Min_Temperature_C': [last_12_months['Min_Temperature_C'].iloc[-1]],
+        'rolling_avg_rainfall': [last_12_months['rolling_avg_rainfall'].iloc[-1]],
+        'rolling_avg_temp': [last_12_months['rolling_avg_temp'].iloc[-1]],
+        'temp_range': [last_12_months['temp_range'].iloc[-1]],
         'temp_lag_1': [last_12_months['Average_Temperature_C'].iloc[-1]],
         'temp_lag_2': [last_12_months['Average_Temperature_C'].iloc[-2]],
         'temp_lag_3': [last_12_months['Average_Temperature_C'].iloc[-3]],
@@ -143,8 +178,14 @@ else:  # Predictions page
         'month_cos': [np.cos(2 * np.pi * (last_date.month)/12)]
     })
     
+    # Ensure features are in the correct order
+    input_features = input_features[feature_order]
+    
+    # Convert to numpy array to avoid feature name issues with scaler
+    input_array = input_features.values
+    
     # Scale features
-    input_scaled = scaler.transform(input_features)
+    input_scaled = scaler.transform(input_array)
     
     # Make predictions
     temp_pred = temp_model.predict(input_scaled)[0]
