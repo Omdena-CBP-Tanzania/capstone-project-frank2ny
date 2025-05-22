@@ -2,7 +2,9 @@ import pandas as pd
 import os
 
 def load_existing_data():
-    
+    """
+    Load the existing Tanzania climate data.
+    """
     try:
         data_path = 'data/tanzania_climate_data.csv'
         if os.path.exists(data_path):
